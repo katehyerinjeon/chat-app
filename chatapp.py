@@ -1,6 +1,7 @@
 import argparse
 import socket
 import sys
+from client import Client
 from server import Server
 
 
@@ -38,6 +39,9 @@ def main():
             username, port, server_ip, server_port = args.client_args
             port = int(port)
             server_port = int(server_port)
+            host_name = socket.gethostname()
+            ip = socket.gethostbyname(host_name)
+            client = Client(username, ip, port, server_ip, server_port)
 
 
 if __name__ == '__main__':
