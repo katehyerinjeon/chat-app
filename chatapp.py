@@ -1,5 +1,7 @@
 import argparse
+import socket
 import sys
+from server import Server
 
 
 def check_port_range(port_str):
@@ -23,16 +25,19 @@ def main():
         if len(args.server_args) != 1:
             raise argparse.ArgumentTypeError('For server mode, you need to provide the server port')
         else:
-            server_port = int(args.server_args[0])
+            port = int(args.server_args[0])
+            host_name = socket.gethostname()
+            ip = socket.gethostbyname(host_name)
+            server = Server(ip, port)
 
     # client mode
     if args.client_args:
         if len(args.client_args) != 4:
             raise argparse.ArgumentTypeError('For client mode, you need to provide username, server IP, server port, and client port')
         else:
-            username, server_ip, server_port, client_port = args.client_args
+            username, port, server_ip, server_port = args.client_args
+            port = int(port)
             server_port = int(server_port)
-            client_port = int(client_port)
 
 
 if __name__ == '__main__':
