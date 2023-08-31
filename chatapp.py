@@ -1,5 +1,4 @@
 import argparse
-import json
 import socket
 import sys
 from client import Client
@@ -30,17 +29,9 @@ def main():
             port = int(args.server_args[0])
             host_name = socket.gethostname()
             ip = socket.gethostbyname(host_name)
+
             server = Server(ip, port)
-
-            while True:
-                message, address = server.socket.recvfrom(4096)
-                message_list = message.decode('utf-8').split(' ')
-                request = message_list[0]
-
-                if request == 'reg':
-                    server.reg(message_list[1], address)
-
-            server.close_socket()
+            server.start()
 
     # client mode
     if args.client_args:
@@ -52,30 +43,9 @@ def main():
             server_port = int(server_port)
             host_name = socket.gethostname()
             ip = socket.gethostbyname(host_name)
+
             client = Client(username, ip, port, server_ip, server_port)
-
-            client.reg()
-
-            while True:
-                message, address = client.socket.recvfrom(4096)
-
-                # message received from server
-                if client.is_server(address):
-                    try:
-                        table = json.loads(message.decode('utf-8'))
-                        client.update_table(table)
-                    except json.decoder.JSONDecodeError:
-                        message_list = message.decode('utf-8').split(' ')
-                        request = message_list[0]
-                        if request == 'reg':
-                            if message_list[1] == 'ACK':
-                                client.display_status('>>> Welcome! You are registered now.')
-
-                # message received from another client
-                else:
-                    pass
-
-            client.close_socket()
+            client.start()
 
 
 if __name__ == '__main__':
