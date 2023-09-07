@@ -1,5 +1,6 @@
 import json
 import socket
+from threading import Thread
 
 
 class Client:
@@ -16,8 +17,14 @@ class Client:
         self.socket.bind((self.ip, self.port))
         self.reg()
 
+        user_input_thread = Thread(target=self.user_input)
+        user_input_thread.start()
+
+        print('>>>', end=' ')
+
         while True:
             message, address = self.socket.recvfrom(4096)
+
             # message received from server
             if self.is_server(address):
                 try:
@@ -30,16 +37,28 @@ class Client:
 
                     if request == 'reg':
                         if message_list[1] == 'ACK':
-                            self.display_status('>>> Welcome! You are registered.')
+                            self.display_status('Welcome! You are registered.')
                     elif request == 'dereg':
                         if message_list[1] == 'ACK':
-                            self.display_status('>>> Goodbye.')
+                            self.display_status('You are offline. Goodbye.')
 
             # message received from another client
             else:
                 pass
 
         self.close_socket()
+
+    def user_input(self):
+        while True:
+            user_input = input()
+            request = user_input.split(' ')[0]
+
+            if request == 'reg':
+                self.reg()
+            elif request == 'dereg':
+                self.dereg()
+
+            print('>>>', end=' ')
 
     def reg(self):
         message = 'reg {}'.format(self.username)
@@ -51,8 +70,8 @@ class Client:
 
     def update_table(self, table):
         self.table = table
-        self.display_status('>>> Table updated.')
-        self.display_table()
+        self.display_status('Table updated.')
+        self.display_status(self.table)
 
     def is_server(self, address):
         if address[0] == self.server_ip and address[1] == self.server_port:
@@ -60,10 +79,7 @@ class Client:
         return False
 
     def display_status(self, status):
-        print(status)
-
-    def display_table(self):
-        print(self.table)
+        print('{}\n>>> '.format(status), end='')
 
     def close_socket(self):
         self.socket.close()

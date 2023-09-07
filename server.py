@@ -21,7 +21,7 @@ class Server:
             if request == 'reg':
                 self.reg(message_list[1], address)
             elif request == 'dereg':
-                self.dereg()
+                self.dereg(message_list[1], address)
 
         self.close_socket()
 
@@ -35,6 +35,7 @@ class Server:
             }
         else:
             self.table[username]['isOnline'] = True
+
         self.send_ack('reg', address)
         self.broadcast_table()
         self.display_status('{} registered'.format(username))
