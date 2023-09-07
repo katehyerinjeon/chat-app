@@ -48,7 +48,9 @@ class Client:
 
             # message received from another client
             else:
-                pass
+                for username in self.table:
+                    if address[0] == self.table[username]['ip'] and address[1] == self.table[username]['port']:
+                        self.display_status('{}: {}'.format(username, message.decode('utf-8')))
 
         self.close_socket()
 
@@ -60,14 +62,15 @@ class Client:
 
             if request == 'reg':
                 self.reg()
+                print('>>>', end=' ')
             elif request == 'dereg':
                 self.dereg()
+                print('>>>', end=' ')
             elif request == 'send':
                 username = input_list.pop(0)
                 message = ' '.join(input_list)
+                print('>>>', end=' ')
                 self.send(username, message)
-
-            print('>>>', end=' ')
 
     def reg(self):
         message = 'reg {}'.format(self.username)
@@ -78,8 +81,17 @@ class Client:
         self.socket.sendto(message.encode('utf-8'), (self.server_ip, self.server_port))
 
     def send(self, username, message):
-        if username in self.table:
-            self.socket.sendto(message.encode('utf-8'), (self.table[username]['ip'], self.table[username]['port']))
+        if username not in self.table:
+            self.display_status('Username {} not found. Try again'.format(username))
+        else:
+            recipient = self.table[username]
+            if recipient['isOnline']:
+                self.socket.sendto(message.encode('utf-8'), (recipient['ip'], recipient['port']))
+            else:
+                self.socket.sendto('{} {}'.format(username, message).encode('utf-8'), (self.server_ip, self.server_port))
+
+    def send_ack(self, request, address):
+        self.socket.sendto('{} ACK'.format(request).encode('utf-8'), address)
 
     def update_table(self, table):
         self.table = table
