@@ -33,23 +33,34 @@ class Server:
                 'port': address[1],
                 'isOnline': True
             }
+            self.send_ack('reg', address)
+            self.broadcast_table()
+            self.display_status('{} registered'.format(username))
+            self.display_table()
+        elif self.table[username]['isOnline']:
+            self.send_error('reg', address, 'already_online')
         else:
             self.table[username]['isOnline'] = True
-
-        self.send_ack('reg', address)
-        self.broadcast_table()
-        self.display_status('{} registered'.format(username))
-        self.display_table()
+            self.send_ack('reg', address)
+            self.broadcast_table()
+            self.display_status('{} registered'.format(username))
+            self.display_table()
 
     def dereg(self, username, address):
-        self.table[username]['isOnline'] = False
-        self.send_ack('dereg', address)
-        self.broadcast_table()
-        self.display_status('{} de-registered'.format(username))
-        self.display_table()
+        if self.table[username]['isOnline']:
+            self.table[username]['isOnline'] = False
+            self.send_ack('dereg', address)
+            self.broadcast_table()
+            self.display_status('{} de-registered'.format(username))
+            self.display_table()
+        else:
+            self.send_error('dereg', address, 'already_offline')
 
     def send_ack(self, request, address):
         self.socket.sendto('{} ACK'.format(request).encode('utf-8'), address)
+
+    def send_error(self, request, address, error):
+        self.socket.sendto('{} {}'.format(request, error).encode('utf-8'), address)
 
     def send_table(self, address):
         self.socket.sendto(json.dumps(self.table).encode('utf-8'), address)

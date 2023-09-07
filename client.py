@@ -38,9 +38,13 @@ class Client:
                     if request == 'reg':
                         if message_list[1] == 'ACK':
                             self.display_status('Welcome! You are registered.')
+                        elif message_list[1] == 'already_online':
+                            self.display_status('You are already online.')
                     elif request == 'dereg':
                         if message_list[1] == 'ACK':
                             self.display_status('You are offline. Goodbye.')
+                        elif message_list[1] == 'already_offline':
+                            self.display_status('You are already offline. Register to be online.')
 
             # message received from another client
             else:
@@ -51,12 +55,17 @@ class Client:
     def user_input(self):
         while True:
             user_input = input()
-            request = user_input.split(' ')[0]
+            input_list = user_input.split(' ')
+            request = input_list.pop(0)
 
             if request == 'reg':
                 self.reg()
             elif request == 'dereg':
                 self.dereg()
+            elif request == 'send':
+                username = input_list.pop(0)
+                message = ' '.join(input_list)
+                self.send(username, message)
 
             print('>>>', end=' ')
 
@@ -67,6 +76,10 @@ class Client:
     def dereg(self):
         message = 'dereg {}'.format(self.username)
         self.socket.sendto(message.encode('utf-8'), (self.server_ip, self.server_port))
+
+    def send(self, username, message):
+        if username in self.table:
+            self.socket.sendto(message.encode('utf-8'), (self.table[username]['ip'], self.table[username]['port']))
 
     def update_table(self, table):
         self.table = table
